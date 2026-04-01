@@ -1,0 +1,58 @@
+# =============================================================
+# Spring App Deployment
+# - Spring Boot CRUD 앱의 Pod를 생성하고 관리하는 설정
+# - 몇 개를 띄울지, 어떤 이미지를 쓸지, 헬스체크는 어떻게 할지 정의
+# =============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-app
+  namespace: spring-app
+  labels:
+    app.kubernetes.io/name: spring-app
+spec:
+  replicas: 2                       # Pod를 2개 복제해서 실행 (트래픽 분산 + 고가용성)
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: spring-app  # 이 라벨을 가진 Pod를 이 Deployment가 관리
+
+  template:                         # Pod 생성 템플릿 (아래 내용대로 Pod가 만들어짐)
+    metadata:
+      labels:
+        app.kubernetes.io/name: spring-app  # Pod에 붙는 라벨 (Service, ServiceMonitor가 이 라벨로 찾음)
+    spec:
+      containers:
+        - name: spring-app
+          image: ten99/article:latest  # Docker Hub에서 가져올 이미지 (ten99 = Docker Hub username)
+
+          ports:
+            - name: http             # 포트 이름 (ServiceMonitor에서 이 이름으로 참조)
+              containerPort: 8080    # Spring Boot 기본 포트
+
+          # Readiness Probe: "이 Pod가 트래픽을 받을 준비가 됐는가?"
+          # → 이 체크를 통과해야 Service가 이 Pod에 트래픽을 보냄
+          readinessProbe:
+            httpGet:
+              path: /actuator/health # Spring Boot Actuator 헬스체크 엔드포인트
+              port: 8080
+            initialDelaySeconds: 20  # 컨테이너 시작 후 20초 뒤부터 체크 시작 (Spring 부팅 시간 고려)
+            periodSeconds: 10        # 10초마다 체크
+
+          # Liveness Probe: "이 Pod가 아직 살아있는가?"
+          # → 이 체크를 실패하면 K8s가 Pod를 재시작시킴
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30  # Readiness보다 넉넉하게 (부팅 중 죽이면 안 되니까)
+            periodSeconds: 20        # 20초마다 체크
+
+          # 리소스 제한: Pod가 쓸 수 있는 CPU/메모리 범위
+          resources:
+            requests:                # 최소 보장 자원 (스케줄링 기준)
+              memory: "256Mi"        # 최소 256MB 메모리
+              cpu: "250m"            # 최소 0.25 CPU 코어
+            limits:                  # 최대 사용 가능 자원 (초과 시 OOMKill 또는 스로틀링)
+              memory: "512Mi"        # 최대 512MB 메모리
+              cpu: "500m"            # 최대 0.5 CPU 코어

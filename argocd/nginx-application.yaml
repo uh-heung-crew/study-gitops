@@ -1,3 +1,8 @@
+# =============================================================
+# Nginx ArgoCD Application
+# - root-application이 이 파일을 자동으로 감지해서 ArgoCD에 등록
+# - apps/nginx/ 폴더의 K8s 매니페스트를 클러스터에 자동 배포
+# =============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -5,16 +10,19 @@ metadata:
   namespace: argocd
 spec:
   project: default
+
   source:
     repoURL: https://github.com/uh-heung-crew/study-gitops.git
     targetRevision: HEAD
-    path: apps/nginx
+    path: apps/nginx                # apps/nginx/ 안의 yaml들을 클러스터에 적용
+
   destination:
     server: https://kubernetes.default.svc
     namespace: nginx
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=true        # nginx 네임스페이스 자동 생성

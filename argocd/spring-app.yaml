@@ -1,0 +1,29 @@
+# =============================================================
+# Spring App ArgoCD Application
+# - root-application이 이 파일을 자동으로 감지해서 ArgoCD에 등록
+# - apps/spring-app/ 폴더의 K8s 매니페스트를 클러스터에 자동 배포
+# =============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spring-app
+  namespace: argocd                 # ArgoCD Application은 항상 argocd 네임스페이스에 생성
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/uh-heung-crew/study-gitops.git
+    targetRevision: HEAD
+    path: apps/spring-app           # 이 경로의 yaml 파일들을 클러스터에 적용
+                                    # → deployment.yaml, service.yaml, servicemonitor.yaml 등
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spring-app           # 리소스가 배포될 네임스페이스
+
+  syncPolicy:
+    automated:
+      prune: true                   # Git에서 삭제 → 클러스터에서도 삭제
+      selfHeal: true                # 수동 변경 → Git 상태로 자동 복구
+    syncOptions:
+      - CreateNamespace=true        # spring-app 네임스페이스가 없으면 자동 생성

@@ -1,34 +1,47 @@
+# =============================================================
+# Nginx Deployment
+# - nginx 웹서버 Pod를 생성하고 관리하는 설정
+# - 몇 개를 띄울지, 어떤 이미지를 쓸지, 헬스체크는 어떻게 할지 정의
+# =============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
-  namespace: nginx
+  namespace: nginx                  # nginx 네임스페이스에 배포
   labels:
     app.kubernetes.io/name: nginx
 spec:
-  replicas: 4
+  replicas: 4                       # Pod를 4개 복제해서 실행 (트래픽 분산 + 고가용성)
+
   selector:
     matchLabels:
-      app.kubernetes.io/name: nginx
-  template:
+      app.kubernetes.io/name: nginx # 이 라벨을 가진 Pod를 이 Deployment가 관리
+
+  template:                         # Pod 생성 템플릿
     metadata:
       labels:
-        app.kubernetes.io/name: nginx
+        app.kubernetes.io/name: nginx  # Pod에 붙는 라벨 (Service가 이 라벨로 Pod를 찾음)
     spec:
       containers:
         - name: nginx
-          image: nginx:latest
+          image: nginx:latest       # Docker Hub의 공식 nginx 이미지
           ports:
-            - containerPort: 80
+            - containerPort: 80     # nginx가 리스닝하는 포트
+
+          # Readiness Probe: "이 Pod가 트래픽을 받을 준비가 됐는가?"
+          # → 통과해야 Service가 이 Pod에 트래픽을 보냄
           readinessProbe:
             httpGet:
-              path: /
+              path: /               # nginx 기본 페이지로 헬스체크
               port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: 5  # 컨테이너 시작 후 5초 뒤부터 체크 (nginx는 부팅이 빠름)
+            periodSeconds: 10       # 10초마다 체크
+
+          # Liveness Probe: "이 Pod가 아직 살아있는가?"
+          # → 실패하면 K8s가 Pod를 재시작시킴
           livenessProbe:
             httpGet:
               path: /
               port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 20
+            initialDelaySeconds: 10 # Readiness보다 넉넉하게
+            periodSeconds: 20       # 20초마다 체크

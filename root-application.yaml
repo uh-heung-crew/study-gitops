@@ -1,0 +1,27 @@
+# =============================================================
+# Root Application (App of Apps 패턴의 최상위)
+# - 이 파일만 "kubectl apply -f root-application.yaml"로 수동 적용 (최초 1회)
+# - 이후 argocd/ 폴더에 Application yaml을 추가하면 자동으로 생성됨
+# =============================================================
+apiVersion: argoproj.io/v1alpha1   # ArgoCD의 API 버전
+kind: Application                   # ArgoCD Application 리소스
+metadata:
+  name: root                        # ArgoCD UI에 표시될 앱 이름
+  namespace: argocd                 # ArgoCD가 설치된 네임스페이스 (항상 argocd)
+spec:
+  project: default                  # ArgoCD 프로젝트 (default = 제한 없음)
+
+  source:
+    repoURL: https://github.com/uh-heung-crew/study-gitops.git  # 감시할 Git 저장소
+    targetRevision: HEAD            # 어떤 브랜치/태그를 볼지 (HEAD = 최신 커밋)
+    path: argocd                    # 저장소 내에서 감시할 폴더 경로
+                                    # → argocd/ 폴더 안의 yaml들을 자동으로 클러스터에 적용
+
+  destination:
+    server: https://kubernetes.default.svc  # 배포 대상 클러스터 (현재 클러스터)
+    namespace: argocd                       # Application 리소스가 생성될 네임스페이스
+
+  syncPolicy:
+    automated:                      # 자동 동기화 설정
+      prune: true                   # Git에서 파일 삭제하면 → 클러스터에서도 해당 리소스 삭제
+      selfHeal: true                # 누군가 수동으로 클러스터를 변경하면 → Git 상태로 자동 복구

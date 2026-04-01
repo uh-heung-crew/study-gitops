@@ -1,0 +1,45 @@
+# kube-prometheus-stack 커스텀 설정
+kube-prometheus-stack:
+
+  # --- Grafana 설정 ---
+  grafana:
+    enabled: true
+    service:
+      type: NodePort
+
+    # JVM 대시보드를 자동으로 Grafana에 등록
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: default
+            orgId: 1
+            folder: ""
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/default
+
+    # Grafana.com에서 대시보드를 자동 다운로드
+    dashboards:
+      default:
+        jvm-micrometer:
+          gnetId: 4701            # JVM (Micrometer) 대시보드 - Grafana 커뮤니티에서 가장 인기 있는 JVM 대시보드
+          revision: 1
+          datasource: Prometheus
+        spring-boot-statistics:
+          gnetId: 12271           # Spring Boot Statistics 대시보드 - HTTP 요청, 에러율 등
+          revision: 1
+          datasource: Prometheus
+
+  # --- Prometheus 설정 ---
+  prometheus:
+    service:
+      type: NodePort
+
+    prometheusSpec:
+      # 모든 네임스페이스의 ServiceMonitor를 수집 대상으로 포함
+      serviceMonitorSelectorNilUsesHelmValues: false
+      serviceMonitorSelector: {}
+      serviceMonitorNamespaceSelector: {}

@@ -1,7 +1,11 @@
+# =============================================================
+# Nginx Namespace
+# - nginx 관련 리소스(Pod, Service 등)를 격리하는 논리적 공간
+# - 다른 앱(spring-app, monitoring 등)과 리소스가 섞이지 않도록 분리
+# =============================================================
 apiVersion: v1
 kind: Namespace
 metadata:
   name: nginx
   labels:
-    app.kubernetes.io/name: nginx
-
+    app.kubernetes.io/name: nginx   # K8s 표준 라벨 (리소스 식별용)

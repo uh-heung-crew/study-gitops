@@ -1,0 +1,21 @@
+# =============================================================
+# Spring App Service
+# - Pod에 접근할 수 있게 네트워크를 열어주는 설정
+# - Pod IP는 수시로 바뀌지만, Service는 고정된 주소를 제공 (DNS: spring-app.spring-app.svc)
+# - ServiceMonitor가 이 Service를 통해 메트릭을 수집함
+# =============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-app
+  namespace: spring-app
+  labels:
+    app.kubernetes.io/name: spring-app  # ServiceMonitor가 이 라벨로 Service를 찾음
+spec:
+  selector:
+    app.kubernetes.io/name: spring-app  # 이 라벨을 가진 Pod에 트래픽을 전달
+
+  ports:
+    - name: http                     # 포트 이름 (ServiceMonitor의 endpoints.port와 매칭)
+      port: 8080                     # Service가 노출하는 포트
+      targetPort: 8080               # 실제 Pod(컨테이너)의 포트로 전달

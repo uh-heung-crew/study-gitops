@@ -1,0 +1,27 @@
+# =============================================================
+# Spring App ServiceMonitor
+# - Prometheus에게 "이 서비스의 메트릭을 수집해라"라고 알려주는 설정
+# - 이 파일이 있어야 Prometheus가 Spring Boot의 JVM 메트릭을 자동 수집함
+#
+# 흐름: ServiceMonitor → Service → Pod의 /actuator/prometheus 엔드포인트
+#       Prometheus가 이 경로에서 15초마다 JVM 메트릭(메모리, GC, 스레드 등)을 가져감
+# =============================================================
+apiVersion: monitoring.coreos.com/v1   # Prometheus Operator가 제공하는 CRD(Custom Resource Definition)
+kind: ServiceMonitor                    # Prometheus가 인식하는 스크래핑 설정 리소스
+metadata:
+  name: spring-app
+  namespace: spring-app
+  labels:
+    release: monitoring              # ★ 핵심: kube-prometheus-stack이 이 라벨을 가진
+                                     #   ServiceMonitor만 Prometheus에 등록함
+                                     #   이 라벨이 없으면 Prometheus가 무시함!
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: spring-app  # 이 라벨을 가진 Service를 대상으로 메트릭 수집
+
+  endpoints:
+    - port: http                     # Service에서 정의한 포트 이름 (service.yaml의 ports.name과 매칭)
+      path: /actuator/prometheus     # Spring Boot Actuator가 Prometheus 형식으로 메트릭을 노출하는 경로
+                                     # → jvm_memory_used_bytes, jvm_gc_pause_seconds 등이 여기서 나옴
+      interval: 15s                  # 15초마다 메트릭 수집 (너무 짧으면 부하, 너무 길면 정보 부족)
