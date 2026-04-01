@@ -11,8 +11,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nginx
 spec:
-  replicas: 4                       # Pod를 4개 복제해서 실행 (트래픽 분산 + 고가용성)
-
+  replicas: 8                       # Pod를 8개 복제해서 실행 (트래픽 분산 + 고가용성)
   selector:
     matchLabels:
       app.kubernetes.io/name: nginx # 이 라벨을 가진 Pod를 이 Deployment가 관리
