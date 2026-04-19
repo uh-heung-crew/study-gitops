@@ -1,1 +1,6 @@
 .idea
+*.yaml.config
+k3s-config.yaml
+values-private.yaml
+.env
+*.log

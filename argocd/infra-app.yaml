@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infrastructure
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/uh-heung-crew/study-gitops.git
+    targetRevision: HEAD
+    path: charts/infrastructure
+    # helm:  <-- 이 부분을 삭제하여 Git에는 기본값만 남깁니다.
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
