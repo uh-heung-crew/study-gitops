@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: gunkim-server/traffic-simulator
+  tag: latest
+  pullPolicy: Always
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "384Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+service:
+  type: LoadBalancer
+  port: 80
+
+spring:
+  profiles: k8s
